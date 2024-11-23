@@ -58,7 +58,7 @@ void ReloadFonts(void)
 	fontTexture = (Texture2D*)MemAlloc(sizeof(Texture2D));
 	*fontTexture = LoadTextureFromImage(image);
 	UnloadImage(image);
-	io->Fonts->TexID = fontTexture;
+	io->Fonts->TexID = (ImTextureID)fontTexture;
 }
 
 static const KeyboardKey RaylibKeys[] = {
@@ -298,12 +298,12 @@ static MouseCursor ImGuiCursorToRaylib(ImGuiMouseCursor cursor)
     };
 }
 
-static const char* GetClipTextCallback(void*) 
+static const char* GetClipTextCallback(ImGuiContext* context) 
 {
     return GetClipboardText();
 }
 
-static void SetClipTextCallback(void*, const char* text)
+static void SetClipTextCallback(ImGuiContext* context, const char* text)
 {
     SetClipboardText(text);
 }
@@ -472,10 +472,11 @@ void SetupBackend(void)
 
 	io->MousePos = (ImVec2){0, 0};
 
-	io->SetClipboardTextFn = SetClipTextCallback;
-	io->GetClipboardTextFn = GetClipTextCallback;
+	ImGuiPlatformIO* pio = igGetPlatformIO();
+	pio->Platform_SetClipboardTextFn = SetClipTextCallback;
+	pio->Platform_GetClipboardTextFn = GetClipTextCallback;
 
-	io->ClipboardUserData = NULL;
+	pio->Platform_ClipboardUserData = NULL;
 }
 
 void rligSetupFontAwesome(void)
@@ -629,7 +630,7 @@ void ImGui_ImplRaylib_RenderDrawData(ImDrawData* draw_data)
 				continue;
 			}
 
-			ImGuiRenderTriangles(cmd.ElemCount, cmd.IdxOffset, &commandList->IdxBuffer, &commandList->VtxBuffer, cmd.TextureId);
+			ImGuiRenderTriangles(cmd.ElemCount, cmd.IdxOffset, &commandList->IdxBuffer, &commandList->VtxBuffer, (void*)cmd.TextureId);
 			rlDrawRenderBatchActive();
 		}
 	}
